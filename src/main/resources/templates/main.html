@@ -1,0 +1,228 @@
+<html layout:decorate="~{layout}">
+<div layout:fragment="content"
+th:with="notebookList=${mainDataDto.notebookList},
+        noteList=${mainDataDto.noteList},
+        targetNotebook=${mainDataDto.targetNotebook},
+        targetNote=${mainDataDto.targetNote},
+        searchedNotebookList=${mainDataDto.searchedNotebookList},
+        searchedNoteList=${mainDataDto.searchedNoteList},
+        keyword=${paramHandler.keyword},
+        isSearchModal=${paramHandler.isSearchModal},
+        sort=${paramHandler.sort}">
+
+    <dialog th:replace="~{fragments/modal::renameModal}"/>
+    <dialog th:replace="~{fragments/modal::moveModal}"/>
+    <dialog th:replace="~{fragments/modal::searchModal}"/>
+
+    <div class="flex">
+        <div class="card bg-indigo-300 h-[1000px] w-[20%]">
+            <div class="card-body h-[85%]">
+                <ul class="menu overflow-auto">
+                    <li th:replace="~{fragments/notebook::noteTree(${notebookList},${targetNotebook})}"></li>
+                </ul>
+            </div>
+            <div class="card-actions items-center h-[15%] flex flex-col" >
+                <div class="flex gap-2">
+                    <form th:action="@{|/books/write|}" method="post">
+                        <input class="btn btn-success postActionBtn" type="submit" value="생성">
+                    </form>
+                    <form th:action="@{|/groups/${targetNotebook.id}/books/write|}" method="post">
+                        <input class="btn btn-warning postActionBtn" type="submit" value="하위 노트북생성">
+                    </form>
+                    <button class="btn btn-info" onclick="moveModal.showModal()">노트북 이동</button>
+                </div>
+                <div class="gap-2 flex">
+                    <button class="btn btn-info" onclick="renameModal.showModal()">노트북 수정</button>
+                    <form th:action="@{|/books/${targetNotebook.id}/delete|}" method="post">
+                        <input class="btn btn-error postActionBtn" type="submit" value="삭제">
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="card bg-red-300 w-[20%] h-[1000px] text-center">
+            <div class="card-body h-[85%]">
+                <ul class="h-[100%] overflow-auto">
+                    <li th:each="note : ${noteList}" th:with="basic='w-[100%] p-[10px] hover:cursor-pointer getActionBtn'">
+                        <details open>
+                            <summary class="flex p-0 m-0">
+                                <a th:class="${basic}"
+                                   th:classappend="${note.id == targetNote.id} ? 'bg-blue-600' : '' "
+                                   th:data-url="@{|/books/${targetNotebook.id}/notes/${note.id}|}"
+                                   th:text="${note.title}">
+                                </a>
+                            </summary>
+                        </details>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-actions items-center h-[15%] flex flex-col">
+                <div class="gap-2 flex">
+                    <a th:data-url="@{|/books/${targetNotebook.id}/notes/${targetNote.id}|}" class="btn btn-outline sortDate bg-white">날짜순</a>
+                    <a th:data-url="@{|/books/${targetNotebook.id}/notes/${targetNote.id}|}" class="btn btn-outline sortTitle bg-white">이름순</a>
+                </div>
+                <div class="gap-2">
+                    <form th:action="@{|/books/${targetNotebook.id}/notes/write|}" method="post">
+                        <input class="btn btn-success postActionBtn" type="submit" value="노트 생성">
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="card w-[60%] h-[1000px]">
+            <div class="card-body h-[90%]">
+                <form th:action="@{|/books/${targetNotebook.id}/notes/${targetNote.id}/update|}" method="post" id="updateForm" class="flex flex-col items-center gap-5">
+                    <div>
+                        <input type="hidden" name="id" th:value="${targetNote.id}">
+                    </div>
+                    <div>
+                        <input class="input input-bordered w-[1000px] text-center" type="text" name="title" th:value="${targetNote.title}">
+                    </div>
+                    <div>
+                        <input type="hidden" name="content" id="editor-body" th:value="${targetNote.content}">
+                        <div id="editor"/>
+                    </div>
+                </form>
+                <div class="card-actions justify-center">
+                    <input class="btn btn-info w-[500px] postActionBtn" type="button" value="수정" onclick="updateForm()">
+                    <form th:action="@{|/books/${targetNotebook.id}/notes/${targetNote.id}/delete|}" method="post" id="deleteForm">
+                        <input class="btn btn-error w-[500px] postActionBtn" type="button" value="삭제" onclick="deleteForm();">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="params">
+        <input type="hidden" name="keyword" th:value="${keyword}">
+        <input type="hidden" name="sort" th:value="${sort}">
+    </div>
+    <div>
+        <input type="hidden" id="isSearchModal" name="isSearchModal" th:value="${isSearchModal}">
+    </div>
+<script>
+
+    const editor = new toastui.Editor({
+
+        el: document.querySelector('#editor'),
+        height: '750px',
+        width: 'auto',
+        initialEditType: 'markdown',
+        previewStyle: 'vertical',
+        initialValue: document.getElementById("editor-body").value,
+
+    });
+
+    function updateForm() {
+        const form = document.getElementById("updateForm");
+        const editorBody = document.getElementById("editor-body");
+        editorBody.value = editor.getMarkdown();
+        if (confirm("수정하시겠습니까?")) {
+            form.submit();
+        }
+    }
+
+    function deleteForm() {
+        const form = document.getElementById("deleteForm");
+        if (confirm("삭제하시겠습니까?")) {
+            form.submit();
+        }
+    }
+
+</script>
+<script>
+
+    window.onload = () => {
+
+        const isSearchModal = document.querySelector("#isSearchModal").value;
+        if (JSON.parse(isSearchModal)) {
+            searchModal.showModal();
+        }
+
+        document.querySelectorAll(".getActionBtn").forEach((btn) => {
+            btn.addEventListener("click" , (e) => {
+                e.preventDefault();
+                getAction(btn);
+            });
+        });
+
+        document.querySelectorAll(".postActionBtn").forEach((btn) => {
+            btn.addEventListener("click" , (e) => {
+                e.preventDefault();
+                postAction(btn);
+            });
+        });
+
+        document.querySelector(".sortDate").addEventListener("click", (e) => {
+            getAction(e.target, (params) => {
+                params.sort = "date";
+            });
+        });
+
+
+        document.querySelector(".sortTitle").addEventListener("click", (e) => {
+            getAction(e.target, (params) => {
+                params.sort = "title";
+            });
+        });
+
+    }
+
+    function postAction(button, callback = null) {
+        const form = button.form;
+        const params = getDefaultParam();
+        const exParams = [];
+
+        form.querySelectorAll("input").forEach((input) => {
+            if(input.name !== null && input.type !== "submit") {
+                exParams.push(input.name);
+            }
+        });
+
+        if(callback !== null) {
+            callback(params);
+        }
+        Object.entries(params).forEach(([key, value]) => {
+            if(exParams.includes(key)) {
+                return;
+            }
+
+            const input = document.createElement("input");
+            input.setAttribute("type", "hidden");
+            input.setAttribute("name", key);
+            input.setAttribute("value", value);
+            form.appendChild(input);
+        });
+
+        form.submit();
+    }
+
+    function getAction(link, callback = null) {
+
+        const url = link.dataset.url;
+        const params = getDefaultParam();
+
+        if(callback !== null) {
+            callback(params);
+        }
+
+        const queryString = new URLSearchParams(params).toString();
+        location.href = url + '?' + queryString;
+
+    }
+
+    function getDefaultParam() {
+        const paramInputList = document.querySelectorAll("#params input");
+
+        const params = {};
+        paramInputList.forEach((input) => {
+            params[input.name] = input.value;
+        });
+
+        return params;
+    }
+
+    getDefaultParam();
+
+</script>
+
+</div>
+</html>

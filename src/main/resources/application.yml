@@ -1,0 +1,31 @@
+server:
+  port: '8999'
+
+spring:
+  application:
+    name: ms1
+
+  datasource:
+    username: root
+    url: jdbc:mysql://localhost:3306/mission?useUnicode=true&characterEncoding=utf8&autoReconnect=true&serverTimezone=Asia/Seoul
+    driverClassName: com.mysql.cj.jdbc.Driver
+    password: ''
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        default_batch_fetch_size: 1000
+
+    hibernate:
+      ddl-auto: update
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 929203548061-no061dftv652em16a1049jnhfu966qn2.apps.googleusercontent.com
+            client-secret: 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
+            scope: email,profile
+

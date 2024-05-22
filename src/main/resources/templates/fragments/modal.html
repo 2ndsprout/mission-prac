@@ -1,0 +1,65 @@
+<dialog th:fragment="renameModal" id="renameModal" class="modal">
+    <div class="modal-box">
+        <form th:action="@{|/books/${targetNotebook.id}/update|}" method="post" class="flex flex-col items-center gap-3">
+            <input type="hidden" name="targetNoteId" th:value="${targetNote.id}">
+            <input type="text" name="name" th:value="${targetNotebook.name}" class="input input-bordered w-[100%] text-center">
+            <input type="submit" value="수정" class="btn w-[100%] postActionBtn">
+        </form>
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn">Close</button>
+            </form>
+        </div>
+    </div>
+</dialog>
+
+<dialog th:fragment="moveModal" id="moveModal" class="modal">
+    <div class="modal-box w-[600px]">
+        <div class="modal-action flex flex-col">
+            <form th:action="@{|/books/${targetNotebook.id}/move|}" method="post" class="h-[80%]">
+                <input type="hidden" name="targetNoteId" th:value="${targetNote.id}">
+                <div class="border-3">
+                    <ul class="menu overflow-auto">
+                        <li th:replace="~{fragments/notebook::moveTree(${notebookList}, ${targetNotebook})}"/>
+                    </ul>
+                </div>
+                <input type="submit" value="이동" class="btn w-[100%] postActionBtn">
+            </form>
+            <form method="dialog" class="h-[20%]">
+                <button class="btn">Close</button>
+            </form>
+        </div>
+    </div>
+</dialog>
+
+<dialog th:fragment="searchModal" id="searchModal" class="modal">
+    <div class="modal-box w-[600px]">
+        <div class="h-[15%]">
+            <form th:action="@{|/books/${targetNotebook.id}/notes/${targetNote.id}|}" class="mx-auto flex justify-center gap-3">
+                <input type="hidden" name="isSearchModal" value="true">
+                <input type="text" name="keyword" th:value="${keyword}" placeholder="키워드를 입력하세요" class="input input-bordered">
+                <input type="submit" value="검색" class="btn btn-outline">
+            </form>
+        </div>
+            <ul class="overflow-auto h-[70%] border-3"
+                th:with="itemsHover='hover:bg-blue-600 hover:text-white hover:cursor-pointer p-[10px] flex', itemAnchor='inline-block w-[100%] getActionBtn'">
+                <li th:each="notebook : ${searchedNotebookList}" th:class="${itemsHover}">
+                    <i class="fa-solid fa-book p-[10px]"></i>
+                    <a th:data-url="@{|/books/${notebook.id}|}"
+                       th:text="${notebook.name}"
+                       th:class="${itemAnchor}"/>
+                </li>
+                <li th:each="note : ${searchedNoteList}" th:class="${itemsHover}">
+                    <i class="fa-solid fa-note-sticky p-[10px]"></i>
+                    <a th:data-url="@{|/books/${note.notebook.id}/notes/${note.id}|}"
+                       th:text="${note.title}"
+                       th:class="${itemAnchor}"/>
+                </li>
+            </ul>
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn">Close</button>
+            </form>
+        </div>
+    </div>
+</dialog>

@@ -1,0 +1,5 @@
+<div th:fragment="errorFragment" th:if="${#fields.hasAnyErrors()}" class="flex flex-col alert alert-warning" role="alert" >
+    <ul th:each="err : ${#fields.allErrors()}">
+        <li th:text="${err}"></li>
+    </ul>
+</div>
