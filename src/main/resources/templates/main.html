@@ -69,7 +69,7 @@ th:with="notebookList=${mainDataDto.notebookList},
         </div>
 
         <div class="card w-[60%] h-[1000px]">
-            <div class="card-body h-[90%]">
+            <div class="card-body h-[90%] gap-3">
                 <form th:action="@{|/books/${targetNotebook.id}/notes/${targetNote.id}/update|}" method="post" id="updateForm" class="flex flex-col items-center gap-5">
                     <div>
                         <input type="hidden" name="id" th:value="${targetNote.id}">
@@ -82,7 +82,7 @@ th:with="notebookList=${mainDataDto.notebookList},
                         <div id="editor"/>
                     </div>
                 </form>
-                <div class="card-actions justify-center">
+                <div class="card-actions justify-center gap-3 mt-[10px]">
                     <input class="btn btn-info w-[500px] postActionBtn" type="button" value="수정" onclick="updateForm()">
                     <form th:action="@{|/books/${targetNotebook.id}/notes/${targetNote.id}/delete|}" method="post" id="deleteForm">
                         <input class="btn btn-error w-[500px] postActionBtn" type="button" value="삭제" onclick="deleteForm();">
